@@ -1,0 +1,9 @@
+folium
+geopandas
+numpy
+pandas
+rasterio
+scikit-learn
+sentinelhub
+torch
+xgboost
