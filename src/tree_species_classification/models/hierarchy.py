@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Iterable, Tuple
 
 import numpy as np
@@ -14,11 +14,50 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Hierarchy:
-    """Represents the three-level hierarchy of classes."""
+    """Represents the three-level hierarchy of classes and their relationships."""
 
     leaf_labels: Dict[int, str]
     genus_labels: Dict[int, str]
     species_labels: Dict[int, str]
+    species_to_genus: Dict[int, int] = field(default_factory=dict)
+    genus_to_leaf: Dict[int, int] = field(default_factory=dict)
+
+    def genus_for_species(self, species_id: int) -> int:
+        """Return the genus identifier for a given species."""
+
+        if self.species_to_genus:
+            genus_id = self.species_to_genus.get(species_id)
+            if genus_id is not None:
+                return genus_id
+        fallback = self._fallback_genus()
+        logger.debug("Falling back to genus %s for species %s", fallback, species_id)
+        return fallback
+
+    def leaf_for_genus(self, genus_id: int) -> int:
+        """Return the leaf-type identifier for a given genus."""
+
+        if self.genus_to_leaf:
+            leaf_id = self.genus_to_leaf.get(genus_id)
+            if leaf_id is not None:
+                return leaf_id
+        fallback = self._fallback_leaf()
+        logger.debug("Falling back to leaf %s for genus %s", fallback, genus_id)
+        return fallback
+
+    def leaf_for_species(self, species_id: int) -> int:
+        """Convenience helper chaining ``genus_for_species`` and ``leaf_for_genus``."""
+
+        return self.leaf_for_genus(self.genus_for_species(species_id))
+
+    def _fallback_leaf(self) -> int:
+        if not self.leaf_labels:
+            return 0
+        return next(iter(self.leaf_labels))
+
+    def _fallback_genus(self) -> int:
+        if not self.genus_labels:
+            return 0
+        return next(iter(self.genus_labels))
 
 
 class HierarchicalClassifier:

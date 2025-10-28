@@ -22,8 +22,12 @@ def split_dataset(
     config: SplitConfig | None = None,
 ) -> Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     cfg = config or SplitConfig()
+    stratify = y_species if np.unique(y_species).size > 1 else None
     idx_train, idx_test = train_test_split(
-        np.arange(X.shape[0]), test_size=cfg.test_size, random_state=cfg.random_state, stratify=y_species
+        np.arange(X.shape[0]),
+        test_size=cfg.test_size,
+        random_state=cfg.random_state,
+        stratify=stratify,
     )
     return (
         (X[idx_train], y_leaf[idx_train], y_genus[idx_train], y_species[idx_train]),
